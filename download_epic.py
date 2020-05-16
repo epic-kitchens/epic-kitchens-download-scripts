@@ -54,10 +54,10 @@ class Epic55Downloader:
         print('Download flow frames', kwargs)
 
     def download_object_detection_images(self, **kwargs):
-        print('Download object detection images', kwargs)
+        print('Download object detection imagesPytho', kwargs)
 
     def download(self, what=('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'consent_forms'),
-                 participants='all', splits=('train', 'test'),):
+                 participants='all', splits=('train', 'test')):
 
         for w in what:
             func = getattr(self, 'download_{}'.format(w))
@@ -68,6 +68,7 @@ class Epic100Downloader(Epic55Downloader):
     def __init__(self, base_url='https://data.bris.ac.uk/datasets/2g1n6qdydwa9u22shpxqzp0t8m',
                  base_output=str(Path.home())):
         super(Epic100Downloader, self).__init__(base_url=base_url, base_output=base_output)
+        self.extension_only = False
         self.ext_participants = ['P{:02d}'.format(p) for p in
                                  [1, 2, 3, 4, 6, 7, 9, 11, 12, 22, 23, 25, 26, 27, 28, 30, 33, 34, 35, 36, 37]]
         self.new_participants = ['P{:02d}'.format(p) for p in [33, 34, 35, 36, 37]]
@@ -98,12 +99,14 @@ if __name__ == '__main__':
     parser.add_argument('--participants', nargs='?', type=str, default='all',
                         help='Specify participants IDs. You can specif a single participant, e.g. --participants 1 or'
                              'a comma-separated list of them, e.g. --participants 1,2,3')
+    parser.add_argument('--extension_only', nargs='?', type=bool, default=False, help='Download extension only')
 
     args = parser.parse_args()
 
     what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'consent_forms') if args.what is None \
         else args.what
 
-    downloader_cls = Epic55Downloader if args.version == 55 else Epic100Downloader
+    downloader_cls = Epic55Downloader if args.version == 55 and not args.extension_only else Epic100Downloader
     downloader = downloader_cls(base_output=args.output_path)
+    downloader.extension_only = True
     downloader.download(what=what, participants=args.participants)
