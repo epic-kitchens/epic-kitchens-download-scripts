@@ -11,20 +11,23 @@ class EpicDownloader:
     def __init__(self,
                  epic_55_base_url='https://data.bris.ac.uk/datasets/3h91syskeag572hl6tvuovwv4d',
                  epic_100_base_url='https://data.bris.ac.uk/datasets/2g1n6qdydwa9u22shpxqzp0t8m',
-                 base_output=str(Path.home())):
+                 base_output=str(Path.home()),
+                 splits_path_epic_55='data/epic_55_splits.csv',
+                 splits_path_epic_100='data/epic_100_splits.csv'):
         self.base_url_55 = epic_55_base_url.rstrip('/')
         self.base_url_100 = epic_100_base_url.rstrip('/')
         self.base_output = os.path.join(base_output, 'EPIC-KITCHENS')
         self.videos_per_split = {}
         self.challenges_splits = []
-        self.parse_splits('data/splits.csv')
+        self.epic_55_video_list = []
+        self.parse_splits(splits_path_epic_55, splits_path_epic_100)
 
     def download_file(self, url, output_path):
         Path(os.path.dirname(output_path)).mkdir(parents=True, exist_ok=True)
 
         try:
             with urllib.request.urlopen(url) as response, open(output_path, 'wb') as output_file:
-                print('Downloading {} to {}'.format(url, output_path))
+                print('Downloading from\n\t{}\nto\n\t{}'.format(url, output_path))
                 shutil.copyfileobj(response, output_file)
         except urllib.error.HTTPError as e:
             print('Could not download file from {}\nError: {}'.format(url, str(e)))
@@ -32,8 +35,16 @@ class EpicDownloader:
     def parse_bool(self, b):
         return b.lower().strip() in ['true', 'yes', 'y']
 
-    def parse_splits(self, list_path):
-        with open(list_path) as csvfile:
+    def parse_splits(self, epic_55_splits_path, epic_100_splits_path):
+        epic_55_videos = {}
+
+        with open(epic_55_splits_path) as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+
+            for row in reader:
+                epic_55_videos[row['video_id']] = row['split']
+
+        with open(epic_100_splits_path) as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
             self.challenges_splits = [f for f in reader.fieldnames if f != 'video_id']
 
@@ -43,15 +54,17 @@ class EpicDownloader:
             for row in reader:
                 video_id = row['video_id']
                 parts = video_id.split('_')
-                participant = parts[0]
+                participant = int(parts[0].split('P')[1])
                 extension = len(parts[1]) == 3
-                v = {'video_id': video_id, 'participant': participant, 'extension': extension}
+                epic_55_split = None if extension else epic_55_videos[video_id]
+                v = {'video_id': video_id, 'participant': participant, 'extension': extension,
+                     'epic_55_split': epic_55_split}
 
                 for split in self.challenges_splits:
                     if self.parse_bool(row[split]):
                         self.videos_per_split[split].append(v)
 
-    def download_consent_forms(self, **kwargs):
+    def download_consent_forms(self, video_dicts):
         files = ['ConsentForm.pdf', 'ParticipantsInformationSheet.pdf']
 
         for f in files:
@@ -59,46 +72,77 @@ class EpicDownloader:
             url = '/'.join([self.base_url_55, 'ConsentForms', f])
             self.download_file(url, output_path)
 
-    def download_videos(self, **kwargs):
-        print('Download videos', kwargs)
+    def download_videos(self, video_dicts):
+        print('Download videos')
 
-    def download_rgb_frames(self, **kwargs):
-        print('Download rgb frames', kwargs)
+    def download_rgb_frames(self, video_dicts):
+        print('Download rgb frames')
 
-    def download_flow_frames(self, **kwargs):
-        print('Download flow frames', kwargs)
+    def download_flow_frames(self, video_dicts):
+        print('Download flow frames')
 
-    def download_object_detection_images(self, **kwargs):
-        print('Download object detection imagesPytho', kwargs)
+    def download_object_detection_images(self, video_dicts):
+        print('Download object detection images')
 
     def download(self, what=('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'consent_forms'),
-                 participants='all', splits=('train', 'val', 'test'), challenges=('ar', 'da', 'cmr'),
-                 extension_only=False, epic55_only=False):
+                 participants='all', splits='all', challenges='all', extension_only=False, epic55_only=False):
 
-        download_list = []
+        video_dicts = {}
 
-        for c in challenges:
-            for s in splits:
-                field = '{}_{}'.format(c, s)
-                # TODO fix this, as we won't have val split for cmr for example
-                # assert field in self.splits, 'Invalid combination of challenge-split: {}-{}'.format(c, s)
+        if splits == 'all' and challenges == 'all':
+            download_splits = self.challenges_splits
+        elif splits == 'all':
+            download_splits = [cs for cs in self.challenges_splits for c in challenges if c == cs.split('_')[0]]
+        elif challenges == 'all':
+            download_splits = [cs for cs in self.challenges_splits for s in splits if s in cs.partition('_')[2]]
+        else:
+            download_splits = [cs for cs in self.challenges_splits for c in challenges for s in splits
+                               if c == cs.split('_')[0] and s in cs.partition('_')[2]]
 
-                if participants == 'all' and not extension_only and not epic55_only:
-                    download_list.extend(self.videos_per_split[field])
-                else:
-                    pass  # TODO: filter video lists based on participants and epic version
+        for ds in download_splits:
+            if participants == 'all' and not extension_only and not epic55_only:
+                vl = self.videos_per_split[ds]
+            else:
+                # we know that only one between extension_only and epic_55_only will be True
+                vl = [v for v in self.videos_per_split[ds] if (extension_only and v['extension']) or
+                                                              (epic55_only and not v['extension'])]
 
-        # TODO make sure the final list doesn't contain duplicates, which is possible if we select all (there are
-        # overlaps between splits
+                if participants != 'all':
+                    vl = [v for v in vl if v['participant'] in participants]
+
+            video_dicts.update({v['video_id']: v for v in vl})  # we use a dict to avoid duplicates
+
+        if epic55_only:
+            source = 'EPIC 55'
+        elif extension_only:
+            source = 'EPIC 100 (extension only)'
+        else:
+            source = 'EPIC 100'
+
+        what_str = ', '.join(' '.join(w.split('_')) for w in what)
+        participants_str = 'all' if participants == 'all' else ', '.join(['P{:02d}'.format(p) for p in participants])
+
+        print('='*120)
+        print('Going to download: {}\n'
+              'for challenges: {}\n'
+              'splits: {}\n'
+              'participants: {}\n'
+              'data source: {}'.format(what_str, challenges, splits, participants_str, source))
+        print('='*120)
 
         for w in what:
+            msg = '| Downloading {} now |'.format(' '.join(w.split('_')))
+            print('-' * len(msg))
+            print(msg)
+            print('-' * len(msg))
             func = getattr(self, 'download_{}'.format(w))
-            func(participants=participants, splits=splits)
+            func(video_dicts)
+
+        print('All done, bye!')
+        print('=' * 120)
 
 
-if __name__ == '__main__':
-    # works with Python 3.5+  # TODO check python version and raise exception
-
+def parse_args():
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument('--output_path', nargs='?', type=str, default=Path.home(),
                         help='Path where to download files. Default is {}'.format(Path.home()))
@@ -114,8 +158,8 @@ if __name__ == '__main__':
     parser.add_argument('--participants', nargs='?', type=str, default='all',
                         help='Specify participants IDs. You can specif a single participant, e.g. `--participants 1` or'
                              'a comma-separated list of them, e.g. `--participants 1,2,3`')
-    parser.add_argument('--extension_only', nargs='?', type=bool, default=False, help='Download extension only')
-    parser.add_argument('--epic55_only', nargs='?', type=bool, default=False, help='Download only EPIC 55''s data')
+    parser.add_argument('--extension_only', action='store_true', help='Download extension only')
+    parser.add_argument('--epic55_only', action='store_true', help='Download only EPIC 55''s data')
     parser.add_argument('--action_recognition', dest='challenges', action='append_const', const='ar',
                         help='Download data for the action recognition challenge')
     parser.add_argument('--domain_adaptation', dest='challenges', action='append_const', const='da',
@@ -149,16 +193,33 @@ if __name__ == '__main__':
                         help='Download the smaller target test set used to validate hyper-parameters for domain '
                              'adaptation')
 
-    # TODO: check for incompatible arguments
-    # TODO: parse participants
-
     args = parser.parse_args()
+    assert not (args.extension_only and args.epic55_only), 'You can specify either --extension_only or --epic55_only' \
+                                                           ', but not both'
+    return args
+
+
+if __name__ == '__main__':
+    # works with Python 3.5+  # TODO check python version and raise exception
+    args = parse_args()
 
     what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'consent_forms') if args.what is None \
         else args.what
-    challenges = ('ar', 'da', 'cmr') if args.challenges is None else args.challenges
-    splits = ('train', 'val', 'test') if args.splits is None else args.splits
+    challenges = 'all' if args.challenges is None else args.challenges
+    splits = 'all' if args.splits is None else args.splits
+
+    if args.participants != 'all':
+        try:
+            participants = [int(p.strip()) for p in args.participants.split(',')]
+        except ValueError:
+            print('Invalid participants arguments: {}.'
+                  '\nYou can specif a single participant, e.g. `--participants 1` or\n'
+                  'a comma-separated list of them, e.g. `--participants 1,2,3`.'
+                  '\nUsing all participants now'.format(args.participants))
+            participants = 'all'
+    else:
+        participants = 'all'
 
     downloader = EpicDownloader(base_output=args.output_path)
-    downloader.download(what=what, participants=args.participants, splits=splits, challenges=challenges,
+    downloader.download(what=what, participants=participants, splits=splits, challenges=challenges,
                         extension_only=args.extension_only, epic55_only=args.epic55_only)
