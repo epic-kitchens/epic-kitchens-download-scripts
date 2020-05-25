@@ -2,9 +2,24 @@ import argparse
 import os
 import csv
 import shutil
-import urllib.request
-import urllib.error
-from pathlib import Path
+import sys
+
+try:
+    import urllib.request
+    import urllib.error
+    from pathlib import Path
+except ImportError as e:
+    print('Error: {}'.format(e))
+    print('This script works with Python 3.5+. Please use a more recent version of Python')
+    exit(-1)
+
+
+def print_header(header, char='*'):
+    print()
+    print(char * len(header))
+    print(header)
+    print(char * len(header))
+    print()
 
 
 class EpicDownloader:
@@ -22,17 +37,19 @@ class EpicDownloader:
         self.epic_55_video_list = []
         self.parse_splits(splits_path_epic_55, splits_path_epic_100)
 
-    def download_file(self, url, output_path):
+    @staticmethod
+    def download_file(url, output_path):
         Path(os.path.dirname(output_path)).mkdir(parents=True, exist_ok=True)
 
         try:
             with urllib.request.urlopen(url) as response, open(output_path, 'wb') as output_file:
-                print('Downloading from\n\t{}\nto\n\t{}'.format(url, output_path))
+                print('Downloading\nfrom  {}\nto    {}'.format(url, output_path))
                 shutil.copyfileobj(response, output_file)
         except urllib.error.HTTPError as e:
             print('Could not download file from {}\nError: {}'.format(url, str(e)))
 
-    def parse_bool(self, b):
+    @staticmethod
+    def parse_bool(b):
         return b.lower().strip() in ['true', 'yes', 'y']
 
     def parse_splits(self, epic_55_splits_path, epic_100_splits_path):
@@ -57,35 +74,92 @@ class EpicDownloader:
                 participant = int(parts[0].split('P')[1])
                 extension = len(parts[1]) == 3
                 epic_55_split = None if extension else epic_55_videos[video_id]
-                v = {'video_id': video_id, 'participant': participant, 'extension': extension,
-                     'epic_55_split': epic_55_split}
+                v = {'video_id': video_id, 'participant': participant, 'participant_str': parts[0],
+                     'extension': extension, 'epic_55_split': epic_55_split}
 
                 for split in self.challenges_splits:
                     if self.parse_bool(row[split]):
                         self.videos_per_split[split].append(v)
 
     def download_consent_forms(self, video_dicts):
-        files = ['ConsentForm.pdf', 'ParticipantsInformationSheet.pdf']
+        files_55 = ['ConsentForm.pdf', 'ParticipantsInformationSheet.pdf']
 
-        for f in files:
-            output_path = os.path.join(self.base_output, 'ConsentForms', f)
+        for f in files_55:
+            output_path = os.path.join(self.base_output, 'ConsentForms', 'EPIC-55-{}'.format(f))
             url = '/'.join([self.base_url_55, 'ConsentForms', f])
             self.download_file(url, output_path)
 
-    def download_videos(self, video_dicts):
-        print('Download videos')
+        output_path = os.path.join(self.base_output, 'ConsentForms', 'EPIC-100-ConsentForm.pdf')
+        url = '/'.join([self.base_url_100, 'ConsentForms', 'consent-form.pdf'])
+        self.download_file(url, output_path)
 
-    def download_rgb_frames(self, video_dicts):
-        print('Download rgb frames')
+    def download_videos(self, video_dicts, file_ext='MP4'):
+        def epic_55_parts(d):
+            return ['videos', d['epic_55_split'], d['participant_str'], '{}.{}'.format(d['video_id'], file_ext)]
 
-    def download_flow_frames(self, video_dicts):
-        print('Download flow frames')
+        def epic_100_parts(d):
+            return [d['participant_str'], 'videos', '{}.{}'.format(d['video_id'], file_ext)]
 
-    def download_object_detection_images(self, video_dicts):
-        print('Download object detection images')
+        self.download_items(video_dicts, epic_55_parts, epic_100_parts)
 
-    def download(self, what=('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'consent_forms'),
-                 participants='all', splits='all', challenges='all', extension_only=False, epic55_only=False):
+    def download_rgb_frames(self, video_dicts, file_ext='tar'):
+        def epic_55_parts(d):
+            return ['frames_rgb_flow', 'rgb', d['epic_55_split'], d['participant_str'],
+                    '{}.{}'.format(d['video_id'], file_ext)]
+
+        def epic_100_parts(d):
+            return [d['participant_str'], 'rgb_frames', '{}.{}'.format(d['video_id'], file_ext)]
+
+        self.download_items(video_dicts, epic_55_parts, epic_100_parts)
+
+    def download_flow_frames(self, video_dicts, file_ext='tar'):
+        def epic_55_parts(d):
+            return ['frames_rgb_flow', 'flow', d['epic_55_split'], d['participant_str'],
+                    '{}.{}'.format(d['video_id'], file_ext)]
+
+        def epic_100_parts(d):
+            return [d['participant_str'], 'flow_frames', '{}.{}'.format(d['video_id'], file_ext)]
+
+        self.download_items(video_dicts, epic_55_parts, epic_100_parts)
+
+    def download_object_detection_images(self, video_dicts, file_ext='tar'):
+        # these are available for epic 55 only, but we will use the epic_100_parts func to create a consistent output
+        # path
+        epic_55_dicts = {k: v for k, v in video_dicts.items() if not v['extension']}
+
+        def epic_55_parts(d):
+            return ['object_detection_images', d['epic_55_split'], d['participant_str'],
+                    '{}.{}'.format(d['video_id'], file_ext)]
+
+        def epic_100_parts(d):
+            return [d['participant_str'], 'object_detection_images', '{}.{}'.format(d['video_id'], file_ext)]
+
+        self.download_items(epic_55_dicts, epic_55_parts, epic_100_parts)
+
+    def download_metadata(self, video_dicts, file_ext='csv'):
+        # these are available for epic 55 only, but we will use the epic_100_parts func to create a consistent output
+        # path
+        epic_100_dicts = {k: v for k, v in video_dicts.items() if v['extension']}
+
+        def epic_100_accl_parts(d):
+            return [d['participant_str'], 'meta_data', '{}-accl.{}'.format(d['video_id'], file_ext)]
+
+        def epic_100_gyro_parts(d):
+            return [d['participant_str'], 'meta_data', '{}-gyro.{}'.format(d['video_id'], file_ext)]
+
+        self.download_items(epic_100_dicts, None, epic_100_accl_parts)
+        self.download_items(epic_100_dicts, None, epic_100_gyro_parts)
+
+    def download_items(self, video_dicts, epic_55_parts_func, epic_100_parts_func):
+        for video_id, d in video_dicts.items():
+            extension = d['extension']
+            remote_parts = epic_100_parts_func(d) if extension else epic_55_parts_func(d)
+            url = '/'.join([self.base_url_100 if extension else self.base_url_55] + remote_parts)
+            output_path = os.path.join(self.base_output, *epic_100_parts_func(d))
+            self.download_file(url, output_path)
+
+    def download(self, what=('videos', 'rgb_frames', 'flow_frames'), participants='all', splits='all',
+                 challenges='all', extension_only=False, epic55_only=False):
 
         video_dicts = {}
 
@@ -112,6 +186,9 @@ class EpicDownloader:
 
             video_dicts.update({v['video_id']: v for v in vl})  # we use a dict to avoid duplicates
 
+        # sorting the dictionary
+        video_dicts = {k: video_dicts[k] for k in sorted(video_dicts.keys())}
+
         if epic55_only:
             source = 'EPIC 55'
         elif extension_only:
@@ -122,27 +199,19 @@ class EpicDownloader:
         what_str = ', '.join(' '.join(w.split('_')) for w in what)
         participants_str = 'all' if participants == 'all' else ', '.join(['P{:02d}'.format(p) for p in participants])
 
-        print('='*120)
         print('Going to download: {}\n'
               'for challenges: {}\n'
               'splits: {}\n'
               'participants: {}\n'
               'data source: {}'.format(what_str, challenges, splits, participants_str, source))
-        print('='*120)
 
         for w in what:
-            msg = '| Downloading {} now |'.format(' '.join(w.split('_')))
-            print('-' * len(msg))
-            print(msg)
-            print('-' * len(msg))
+            print_header('| Downloading {} now |'.format(' '.join(w.split('_'))), char='-')
             func = getattr(self, 'download_{}'.format(w))
             func(video_dicts)
 
-        print('All done, bye!')
-        print('=' * 120)
 
-
-def parse_args():
+def create_parser():
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument('--output_path', nargs='?', type=str, default=Path.home(),
                         help='Path where to download files. Default is {}'.format(Path.home()))
@@ -153,13 +222,15 @@ def parse_args():
                         help='Download optical flow frames')
     parser.add_argument('--object_detection_images', dest='what', action='append_const',
                         const='object_detection_images', help='Download object detection images (only for EPIC 55)')
+    parser.add_argument('--metadata', dest='what', action='append_const',
+                        const='metadata', help='Download GoPro''s metadata (only for EPIC 100)')
     parser.add_argument('--consent_forms', dest='what', action='append_const', const='consent_forms',
                         help='Download consent_forms')
     parser.add_argument('--participants', nargs='?', type=str, default='all',
-                        help='Specify participants IDs. You can specif a single participant, e.g. `--participants 1` or'
-                             'a comma-separated list of them, e.g. `--participants 1,2,3`')
+                        help='Specify participants IDs. You can specif a single participant, e.g. `--participants 1` '
+                             'or a comma-separated list of them, e.g. `--participants 1,2,3`')
     parser.add_argument('--extension_only', action='store_true', help='Download extension only')
-    parser.add_argument('--epic55_only', action='store_true', help='Download only EPIC 55''s data')
+    parser.add_argument('--epic55_only', action='store_true', help='Download only EPIC 55\'s data')
     parser.add_argument('--action_recognition', dest='challenges', action='append_const', const='ar',
                         help='Download data for the action recognition challenge')
     parser.add_argument('--domain_adaptation', dest='challenges', action='append_const', const='da',
@@ -193,33 +264,53 @@ def parse_args():
                         help='Download the smaller target test set used to validate hyper-parameters for domain '
                              'adaptation')
 
+    return parser
+
+
+def parse_args(parser):
     args = parser.parse_args()
-    assert not (args.extension_only and args.epic55_only), 'You can specify either --extension_only or --epic55_only' \
-                                                           ', but not both'
+
+    assert not (args.extension_only and args.epic55_only), \
+        'You can specify either --extension_only or --epic55_only, but not both'
+
+    assert not (args.extension_only and ['object_detection_images'] == args.what), \
+        'Object detection images are available only for EPIC 55'
+
+    assert not (args.epic55_only and ['metadata'] == args.what), \
+        'GoPro''s metadata is available only for EPIC 100'
+
+    if args.what is None:
+        args.what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'metadata', 'consent_forms')
+
+    if args.challenges is None:
+        args.challenges = 'all'
+
+    if args.splits is None:
+        args.splits = 'all'
+
+    if args.participants != 'all':
+        try:
+            args.participants = [int(p.strip()) for p in args.participants.split(',')]
+        except ValueError:
+            print('Invalid participants arguments: {}.'
+                  '\nYou can specif a single participant, e.g. `--participants 1` or\n'
+                  'a comma-separated list of them, e.g. `--participants 1,2,3`.'.format(args.participants))
+            exit(-1)
+
     return args
 
 
 if __name__ == '__main__':
-    # works with Python 3.5+  # TODO check python version and raise exception
-    args = parse_args()
+    assert sys.version_info.major == 3 and sys.version_info.minor >= 5, 'This script works with Python 3.5+. ' \
+                                                                        'Please use a more recent Python version'
 
-    what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'consent_forms') if args.what is None \
-        else args.what
-    challenges = 'all' if args.challenges is None else args.challenges
-    splits = 'all' if args.splits is None else args.splits
+    parser = create_parser()
+    args = parse_args(parser)
 
-    if args.participants != 'all':
-        try:
-            participants = [int(p.strip()) for p in args.participants.split(',')]
-        except ValueError:
-            print('Invalid participants arguments: {}.'
-                  '\nYou can specif a single participant, e.g. `--participants 1` or\n'
-                  'a comma-separated list of them, e.g. `--participants 1,2,3`.'
-                  '\nUsing all participants now'.format(args.participants))
-            participants = 'all'
-    else:
-        participants = 'all'
+    print_header('*** Welcome to the EPIC Kitchens Downloader! ***')
 
     downloader = EpicDownloader(base_output=args.output_path)
-    downloader.download(what=what, participants=participants, splits=splits, challenges=challenges,
+    downloader.download(what=args.what, participants=args.participants, splits=args.splits, challenges=args.challenges,
                         extension_only=args.extension_only, epic55_only=args.epic55_only)
+
+    print_header('*** All done, bye! ***')
