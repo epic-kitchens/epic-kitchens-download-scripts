@@ -34,7 +34,6 @@ class EpicDownloader:
         self.base_output = os.path.join(base_output, 'EPIC-KITCHENS')
         self.videos_per_split = {}
         self.challenges_splits = []
-        self.epic_55_video_list = []
         self.parse_splits(splits_path_epic_55, splits_path_epic_100)
 
     @staticmethod
@@ -137,8 +136,6 @@ class EpicDownloader:
         self.download_items(epic_55_dicts, epic_55_parts, epic_100_parts)
 
     def download_metadata(self, video_dicts, file_ext='csv'):
-        # these are available for epic 55 only, but we will use the epic_100_parts func to create a consistent output
-        # path
         epic_100_dicts = {k: v for k, v in video_dicts.items() if v['extension']}
 
         def epic_100_accl_parts(d):
@@ -174,15 +171,15 @@ class EpicDownloader:
                                if c == cs.split('_')[0] and s in cs.partition('_')[2]]
 
         for ds in download_splits:
-            if participants == 'all' and not extension_only and not epic55_only:
+            if not extension_only and not epic55_only:
                 vl = self.videos_per_split[ds]
             else:
                 # we know that only one between extension_only and epic_55_only will be True
                 vl = [v for v in self.videos_per_split[ds] if (extension_only and v['extension']) or
                                                               (epic55_only and not v['extension'])]
 
-                if participants != 'all':
-                    vl = [v for v in vl if v['participant'] in participants]
+            if participants != 'all':
+                vl = [v for v in vl if v['participant'] in participants]
 
             video_dicts.update({v['video_id']: v for v in vl})  # we use a dict to avoid duplicates
 
