@@ -116,7 +116,7 @@ python epic_downloader.py --train --val
 
 Will download all data for the training sets of action recognition and cross-modal retrieval, as well as the validation set for action recognition.
 
-Refer to the table above to check what get downloaded with each split argument.
+Refer to the table above to check what gets downloaded with each split argument.
 
 #### Note on domain adaptation's validation sets
 
