@@ -210,54 +210,54 @@ class EpicDownloader:
 
 def create_parser():
     parser = argparse.ArgumentParser(add_help=True)
-    parser.add_argument('--output_path', nargs='?', type=str, default=Path.home(),
+    parser.add_argument('--output-path', nargs='?', type=str, default=Path.home(),
                         help='Path where to download files. Default is {}'.format(Path.home()))
     parser.add_argument('--videos', dest='what', action='append_const', const='videos', help='Download videos')
-    parser.add_argument('--rgb_frames', dest='what', action='append_const', const='rgb_frames',
+    parser.add_argument('--rgb-frames', dest='what', action='append_const', const='rgb_frames',
                         help='Download rgb frames')
-    parser.add_argument('--flow_frames', dest='what', action='append_const', const='flow_frames',
+    parser.add_argument('--flow-frames', dest='what', action='append_const', const='flow_frames',
                         help='Download optical flow frames')
-    parser.add_argument('--object_detection_images', dest='what', action='append_const',
+    parser.add_argument('--object-detection_images', dest='what', action='append_const',
                         const='object_detection_images', help='Download object detection images (only for EPIC 55)')
     parser.add_argument('--metadata', dest='what', action='append_const',
                         const='metadata', help='Download GoPro''s metadata (only for EPIC 100)')
-    parser.add_argument('--consent_forms', dest='what', action='append_const', const='consent_forms',
+    parser.add_argument('--consent-forms', dest='what', action='append_const', const='consent_forms',
                         help='Download consent_forms')
     parser.add_argument('--participants', nargs='?', type=str, default='all',
                         help='Specify participants IDs. You can specif a single participant, e.g. `--participants 1` '
                              'or a comma-separated list of them, e.g. `--participants 1,2,3`')
-    parser.add_argument('--extension_only', action='store_true', help='Download extension only')
-    parser.add_argument('--epic55_only', action='store_true', help='Download only EPIC 55\'s data')
-    parser.add_argument('--action_recognition', dest='challenges', action='append_const', const='ar',
+    parser.add_argument('--extension-only', action='store_true', help='Download extension only')
+    parser.add_argument('--epic55-only', action='store_true', help='Download only EPIC 55\'s data')
+    parser.add_argument('--action-recognition', dest='challenges', action='append_const', const='ar',
                         help='Download data for the action recognition challenge')
-    parser.add_argument('--domain_adaptation', dest='challenges', action='append_const', const='da',
+    parser.add_argument('--domain-adaptation', dest='challenges', action='append_const', const='da',
                         help='Download data for the domain adaptation challenge')
-    parser.add_argument('--cross_modal_retrieval', dest='challenges', action='append_const', const='cmr',
-                        help='Download data for the cross modal retrieval challenge')
+    parser.add_argument('--action-retrieval', dest='challenges', action='append_const', const='cmr',
+                        help='Download data for the action retrieval challenge')
     parser.add_argument('--train', dest='splits', action='append_const', const='train',
-                        help='Download data from the training split (for action recognition and cross modal retrieval)')
+                        help='Download data from the training split (for action recognition and action retrieval)')
     parser.add_argument('--val', dest='splits', action='append_const', const='val',
                         help='Download data from the validation split (for action recognition only)')
     parser.add_argument('--test', dest='splits', action='append_const', const='test',
-                        help='Download data from the testing split (for action recognition and cross modal retrieval)')
-    parser.add_argument('--source_train', dest='splits', action='append_const', const='source_train',
+                        help='Download data from the testing split (for action recognition and action retrieval)')
+    parser.add_argument('--source-train', dest='splits', action='append_const', const='source_train',
                         help='Download data from the source training split for domain adaptation')
-    parser.add_argument('--source_test', dest='splits', action='append_const', const='source_test',
+    parser.add_argument('--source-test', dest='splits', action='append_const', const='source_test',
                         help='Download data from the source testing split for domain adaptation')
-    parser.add_argument('--target_train', dest='splits', action='append_const', const='target_train',
+    parser.add_argument('--target-train', dest='splits', action='append_const', const='target_train',
                         help='Download data from the target training split for domain adaptation')
-    parser.add_argument('--target_test', dest='splits', action='append_const', const='target_test',
+    parser.add_argument('--target-test', dest='splits', action='append_const', const='target_test',
                         help='Download data from the target testing split for domain adaptation')
-    parser.add_argument('--val_source_train', dest='splits', action='append_const', const='val_source_train',
+    parser.add_argument('--val-source-train', dest='splits', action='append_const', const='val_source_train',
                         help='Download the smaller source train set used to validate hyper-parameters for domain '
                              'adaptation')
-    parser.add_argument('--val_source_test', dest='splits', action='append_const', const='val_source_test',
+    parser.add_argument('--val-source-test', dest='splits', action='append_const', const='val_source_test',
                         help='Download the smaller source test set used to validate hyper-parameters for domain '
                              'adaptation')
-    parser.add_argument('--val_target_train', dest='splits', action='append_const', const='val_target_train',
+    parser.add_argument('--val-target-train', dest='splits', action='append_const', const='val_target_train',
                         help='Download the smaller target train set used to validate hyper-parameters for domain '
                              'adaptation')
-    parser.add_argument('--val_target_test', dest='splits', action='append_const', const='val_target_test',
+    parser.add_argument('--val-target-test', dest='splits', action='append_const', const='val_target_test',
                         help='Download the smaller target test set used to validate hyper-parameters for domain '
                              'adaptation')
 
