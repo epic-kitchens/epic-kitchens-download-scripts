@@ -220,7 +220,7 @@ def create_parser():
     parser.add_argument('--object-detection_images', dest='what', action='append_const',
                         const='object_detection_images', help='Download object detection images (only for EPIC 55)')
     parser.add_argument('--metadata', dest='what', action='append_const',
-                        const='metadata', help='Download GoPro''s metadata (only for EPIC 100)')
+                        const='metadata', help='Download GoPro\'s metadata (only for EPIC 100)')
     parser.add_argument('--consent-forms', dest='what', action='append_const', const='consent_forms',
                         help='Download consent_forms')
     parser.add_argument('--participants', nargs='?', type=str, default='all',
@@ -274,7 +274,7 @@ def parse_args(parser):
         'Object detection images are available only for EPIC 55'
 
     assert not (args.epic55_only and ['metadata'] == args.what), \
-        'GoPro''s metadata is available only for EPIC 100'
+        'GoPro\'s metadata is available only for EPIC 100'
 
     if args.what is None:
         args.what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'metadata', 'consent_forms')
