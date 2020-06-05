@@ -1,6 +1,6 @@
-# The EPIC Kitchens 100 downloader
+# The EPIC Kitchens downloader
 
-We provide a `python` script to download the EPIC Kitchens 100 dataset, either in its entirety or in parts (e.g. only RGB frames). You can download data for a subset of participants, as well as a specific split for a certain challenge (e.g. the `test` split for `action retrieval`). You can also download only the dataset's extension, i.e. only the new data collected for EPIC Kitchens 100.
+We provide a `python` script to download both the EPIC Kitchens 100 and EPIC Kitchens 55 datasets, either in its entirety or in parts (e.g. only RGB frames). You can download data for a subset of participants, as well as a specific split for a certain challenge (e.g. the `test` split for `action retrieval`). You can also download only the dataset's extension, i.e. only the new data collected for EPIC Kitchens 100.
 
 #### Python version
 
