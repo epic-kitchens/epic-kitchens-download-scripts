@@ -1,6 +1,6 @@
-# The EPIC Kitchens downloader
+# The EPIC KITCHENS downloader
 
-We provide a `python` script to download both the EPIC Kitchens 100 and EPIC Kitchens 55 datasets, either in its entirety or in parts (e.g. only RGB frames). You can download data for a subset of participants, as well as a specific split for a certain challenge (e.g. the `test` split for `action retrieval`). You can also download only the dataset's extension, i.e. only the new data collected for EPIC Kitchens 100.
+We provide a `python` script to download both the EPIC KITCHENS-100 and EPIC KITCHENS-55 datasets, either in its entirety or in parts (e.g. only RGB frames). You can download data for a subset of participants, as well as a specific split for a certain challenge (e.g. the `test` split for `action retrieval`). You can also download only the dataset's extension, i.e. only the new data collected for EPIC KITCHENS-100.
 
 #### Python version
 
@@ -13,7 +13,7 @@ The script accepts a number of arguments that allow you to specify what you want
 
 ## Download only certain data types
 
-We provide videos, RGB/optical flow frames, GoPro's metadata (for the extension only) and object detection frames (for EPIC Kitchens 55's videos only). You can also download the consent form templates.
+We provide videos, RGB/optical flow frames, GoPro's metadata (for the extension only) and object detection frames (for EPIC KITCHENS-55's videos only). You can also download the consent form templates.
 
 If you want to download only one (or a subset) of the above, you can do so with the following self-explanatory arguments:
 
@@ -120,9 +120,9 @@ Refer to the table above to check what gets downloaded with each split argument.
 
 #### Note on domain adaptation's validation sets
 
-These refer to unique splits which should be used only to validate hyper-parameters. For example, `-- val-target-test` will download the target test set used for validation. See the EPIC-Kitchens-100 annotations repo [here](https://github.com/epic-kitchens/EPIC-Kitchens-100-Annotations) for more information about domain adaptation splits.
+These refer to unique splits which should be used only to validate hyper-parameters. For example, `-- val-target-test` will download the target test set used for validation. See the EPIC-KITCHENS-100 annotations repo [here](https://github.com/epic-kitchens/EPIC-Kitchens-100-Annotations) for more information about domain adaptation splits.
 
-## Download extension or EPIC Kitchens 55 only
+## Download extension or EPIC KITCHENS-55 only
 
 You can do so with the `--extension-only` and `--epic55-only` arguments. For example:
 
@@ -136,7 +136,7 @@ Will download only the newly collected videos, while
 python epic_downloader.py --participants 3 --epic55-only
 ```
 
-Will download all data from `P03` collected for EPIC Kitchens 55.
+Will download all data from `P03` collected for EPIC KITCHENS-55.
 
 ## Output
 
