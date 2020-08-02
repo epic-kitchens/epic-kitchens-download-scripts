@@ -158,4 +158,6 @@ Data will be split amongst participants under the output directory:
     └── <font color="#0087FF">videos</font>
 </pre>
 
-Each leaf directory will contain `.tar` or `.mp4` files accordingly.
+Each leaf directory will contain `.tar` or `.mp4` files accordingly. 
+
+Previously fully downloaded files will be skipped, so you can download large batches of files over multiple runs.

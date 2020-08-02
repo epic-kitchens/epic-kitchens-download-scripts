@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import os
 import csv
 import shutil
@@ -28,13 +29,24 @@ class EpicDownloader:
                  epic_100_base_url='https://data.bris.ac.uk/datasets/2g1n6qdydwa9u22shpxqzp0t8m',
                  base_output=str(Path.home()),
                  splits_path_epic_55='data/epic_55_splits.csv',
-                 splits_path_epic_100='data/epic_100_splits.csv'):
+                 splits_path_epic_100='data/epic_100_splits.csv',
+                 md5_path='data/md5.csv'):
         self.base_url_55 = epic_55_base_url.rstrip('/')
         self.base_url_100 = epic_100_base_url.rstrip('/')
         self.base_output = os.path.join(base_output, 'EPIC-KITCHENS')
         self.videos_per_split = {}
         self.challenges_splits = []
+        self.md5 = {'55': {}, '100': {}}
         self.parse_splits(splits_path_epic_55, splits_path_epic_100)
+        self.load_md5(md5_path)
+
+    def load_md5(self, path):
+        with open(path) as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=',')
+
+            for row in reader:
+                v = row['version']
+                self.md5[v][row['file_remote_path']] = row['md5']
 
     @staticmethod
     def download_file(url, output_path):
@@ -50,6 +62,16 @@ class EpicDownloader:
     @staticmethod
     def parse_bool(b):
         return b.lower().strip() in ['true', 'yes', 'y']
+    
+    @staticmethod
+    def md5_checksum(path):
+        hash_md5 = hashlib.md5()
+
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+
+        return hash_md5.hexdigest()
 
     def parse_splits(self, epic_55_splits_path, epic_100_splits_path):
         epic_55_videos = {}
@@ -153,7 +175,25 @@ class EpicDownloader:
             remote_parts = epic_100_parts_func(d) if extension else epic_55_parts_func(d)
             url = '/'.join([self.base_url_100 if extension else self.base_url_55] + remote_parts)
             output_path = os.path.join(self.base_output, *epic_100_parts_func(d))
-            self.download_file(url, output_path)
+
+            if self.file_already_downloaded(output_path, remote_parts, extension):
+                print('This file was already downloaded, skipping it: {}'.format(output_path))
+            else:
+                self.download_file(url, output_path)
+
+    def file_already_downloaded(self, output_path, parts, extension):
+        if not os.path.exists(output_path):
+            return False
+
+        version = '100' if extension else '55'
+        key = '/'.join(parts)
+        remote_md5 = self.md5[version].get(key, None)
+
+        if remote_md5 is None:
+            return False  # this should never happen
+
+        local_md5 = self.md5_checksum(output_path)  # we already checked file exists so we should be safe here
+        return local_md5 == remote_md5
 
     def download(self, what=('videos', 'rgb_frames', 'flow_frames'), participants='all', splits='all',
                  challenges='all', extension_only=False, epic55_only=False):
