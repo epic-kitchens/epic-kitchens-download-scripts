@@ -56,7 +56,7 @@ class EpicDownloader:
             with urllib.request.urlopen(url) as response, open(output_path, 'wb') as output_file:
                 print('Downloading\nfrom  {}\nto    {}'.format(url, output_path))
                 shutil.copyfileobj(response, output_file)
-        except urllib.error.HTTPError as e:
+        except Exception as e:
             print('Could not download file from {}\nError: {}'.format(url, str(e)))
 
     @staticmethod
