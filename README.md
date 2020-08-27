@@ -21,6 +21,7 @@ If you want to download only one (or a subset) of the above, you can do so with 
 - `--rgb-frames`
 - `--flow-frames`
 - `--object-detection-images`
+- `--masks`
 - `--metadata`
 - `--consent-forms`
 
@@ -36,7 +37,9 @@ Note that these arguments can be **combined** to download multiple things. For e
 python epic_downloader.py --rgb-frames --flow-frames
 ```
 
-Will download both RGB and optical flow frames.
+Will download both RGB and optical flow frames. 
+
+For more information about objects masks (which you download with `--masks`), check out [the dedicated repository](https://github.com/epic-kitchens/epic-kitchens-100-object-masks).
 
 ## Specifying participants
 

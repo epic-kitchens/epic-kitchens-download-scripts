@@ -27,12 +27,14 @@ class EpicDownloader:
     def __init__(self,
                  epic_55_base_url='https://data.bris.ac.uk/datasets/3h91syskeag572hl6tvuovwv4d',
                  epic_100_base_url='https://data.bris.ac.uk/datasets/2g1n6qdydwa9u22shpxqzp0t8m',
+                 masks_base_url='https://data.bris.ac.uk/datasets/3l8eci2oqgst92n14w2yqi5ytu',
                  base_output=str(Path.home()),
                  splits_path_epic_55='data/epic_55_splits.csv',
                  splits_path_epic_100='data/epic_100_splits.csv',
                  md5_path='data/md5.csv'):
         self.base_url_55 = epic_55_base_url.rstrip('/')
         self.base_url_100 = epic_100_base_url.rstrip('/')
+        self.base_url_masks = masks_base_url.rstrip('/')
         self.base_output = os.path.join(base_output, 'EPIC-KITCHENS')
         self.videos_per_split = {}
         self.challenges_splits = []
@@ -169,12 +171,36 @@ class EpicDownloader:
         self.download_items(epic_100_dicts, None, epic_100_accl_parts)
         self.download_items(epic_100_dicts, None, epic_100_gyro_parts)
 
-    def download_items(self, video_dicts, epic_55_parts_func, epic_100_parts_func):
+    def download_masks(self, video_dicts, file_ext='pkl'):
+        def remote_object_hands_parts(d):
+            return ['hand-objects', d['participant_str'], '{}.{}'.format(d['video_id'], file_ext)]
+
+        def remote_masks_parts(d):
+            return ['masks', d['participant_str'], '{}.{}'.format(d['video_id'], file_ext)]
+
+        def output_object_hands_parts(d):
+            return [d['participant_str'], 'hand-objects', '{}.{}'.format(d['video_id'], file_ext)]
+
+        def output_masks_parts(d):
+            return [d['participant_str'], 'masks', '{}.{}'.format(d['video_id'], file_ext)]
+
+        # data is organised in the same way for both epic-55 and the extension so we pass the same functions
+        self.download_items(video_dicts, remote_object_hands_parts, remote_object_hands_parts,
+                            base_url=self.base_url_masks, output_parts=output_object_hands_parts)
+        self.download_items(video_dicts, remote_masks_parts, remote_masks_parts,
+                            base_url=self.base_url_masks, output_parts=output_masks_parts)
+
+    def download_items(self, video_dicts, epic_55_parts_func, epic_100_parts_func, base_url=None, output_parts=None):
         for video_id, d in video_dicts.items():
             extension = d['extension']
             remote_parts = epic_100_parts_func(d) if extension else epic_55_parts_func(d)
-            url = '/'.join([self.base_url_100 if extension else self.base_url_55] + remote_parts)
-            output_path = os.path.join(self.base_output, *epic_100_parts_func(d))
+
+            if base_url is None:
+                base_url = self.base_url_100 if extension else self.base_url_55
+
+            url = '/'.join([base_url] + remote_parts)
+            output_parts = epic_100_parts_func if output_parts is None else output_parts
+            output_path = os.path.join(self.base_output, *output_parts(d))
 
             if self.file_already_downloaded(output_path, remote_parts, extension):
                 print('This file was already downloaded, skipping it: {}'.format(output_path))
@@ -259,6 +285,8 @@ def create_parser():
                         help='Download optical flow frames')
     parser.add_argument('--object-detection_images', dest='what', action='append_const',
                         const='object_detection_images', help='Download object detection images (only for EPIC 55)')
+    parser.add_argument('--masks', dest='what', action='append_const',
+                        const='masks', help='Download Mask R-CNN masks and hand-object correspondences')
     parser.add_argument('--metadata', dest='what', action='append_const',
                         const='metadata', help='Download GoPro\'s metadata (only for EPIC 100)')
     parser.add_argument('--consent-forms', dest='what', action='append_const', const='consent_forms',
@@ -317,7 +345,8 @@ def parse_args(parser):
         'GoPro\'s metadata is available only for EPIC 100'
 
     if args.what is None:
-        args.what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'metadata', 'consent_forms')
+        args.what = ('videos', 'rgb_frames', 'flow_frames', 'object_detection_images', 'metadata', 'consent_forms',
+                     'masks')
 
     if args.challenges is None:
         args.challenges = 'all'
