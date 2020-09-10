@@ -6,6 +6,10 @@ We provide a `python` script to download both the EPIC KITCHENS-100 and EPIC KIT
 
 The script requires Python **3.5+** and  **no external libraries**.
 
+# Erratum
+
+**Important:** We have recently detected an error in our pre-extracted RGB and Optical flow frames for two videos in our dataset. This does not affect the videos themselves or any of the annotations in this github. However, if you've been using our pre-extracted frames, you can fix the error at your end by [following the instructions in this link](https://github.com/epic-kitchens/epic-kitchens-100-annotations/blob/master/README.md#erratum)
+
 # Using the script
 
 The script accepts a number of arguments that allow you to specify what you want to download: by default the script will download **everything** to your **home directory**. 
