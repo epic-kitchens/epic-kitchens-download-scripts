@@ -186,17 +186,19 @@ class EpicDownloader:
 
         # data is organised in the same way for both epic-55 and the extension so we pass the same functions
         self.download_items(video_dicts, remote_object_hands_parts, remote_object_hands_parts,
-                            base_url=self.base_url_masks, output_parts=output_object_hands_parts)
+                            from_url=self.base_url_masks, output_parts=output_object_hands_parts)
         self.download_items(video_dicts, remote_masks_parts, remote_masks_parts,
-                            base_url=self.base_url_masks, output_parts=output_masks_parts)
+                            from_url=self.base_url_masks, output_parts=output_masks_parts)
 
-    def download_items(self, video_dicts, epic_55_parts_func, epic_100_parts_func, base_url=None, output_parts=None):
+    def download_items(self, video_dicts, epic_55_parts_func, epic_100_parts_func, from_url=None, output_parts=None):
         for video_id, d in video_dicts.items():
             extension = d['extension']
             remote_parts = epic_100_parts_func(d) if extension else epic_55_parts_func(d)
 
-            if base_url is None:
+            if from_url is None:
                 base_url = self.base_url_100 if extension else self.base_url_55
+            else:
+                base_url = from_url
 
             url = '/'.join([base_url] + remote_parts)
             output_parts = epic_100_parts_func if output_parts is None else output_parts
