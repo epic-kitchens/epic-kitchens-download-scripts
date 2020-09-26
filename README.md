@@ -6,9 +6,27 @@ We provide a `python` script to download both the EPIC KITCHENS-100 and EPIC KIT
 
 The script requires Python **3.5+** and  **no external libraries**.
 
-# Erratum
+# Errata
 
-**Important:** We have recently detected an error in our pre-extracted RGB and Optical flow frames for two videos in our dataset. This does not affect the videos themselves or any of the annotations in this github. However, if you've been using our pre-extracted frames, you can fix the error at your end by [following the instructions in this link](https://github.com/epic-kitchens/epic-kitchens-100-annotations/blob/master/README.md#erratum)
+**Important:** We have recently detected an error in our pre-extracted RGB and Optical flow frames for two videos in our dataset. This does not affect the videos themselves or any of the annotations in this github. 
+
+However, if you've been using our pre-extracted frames, you can use the script to download the correct files:
+
+```bash
+python epic_downloader.py --errata
+```
+
+This will download only the 4 affected files:
+
+- `P01/rgb_frames/P01_109.tar`
+- `P01/flow_frames/P01_109.tar`
+- `P27/rgb_frames/P27_103.tar`
+- `P27/flow_frames/P27_103.tar`
+
+If you had downloaded these files previously, they will be overwritten.
+
+As of 26/09/2020, regardless of the `--errata` argument, the script will **always** download the correct version of the
+above files.
 
 # Using the script
 
@@ -168,3 +186,6 @@ Data will be split amongst participants under the output directory:
 Each leaf directory will contain `.tar` or `.mp4` files accordingly. 
 
 Previously fully downloaded files will be skipped, so you can download large batches of files over multiple runs.
+
+Errata files will be overwritten. Once you download the correct version of these files, they will be safely skipped in 
+following runs.
