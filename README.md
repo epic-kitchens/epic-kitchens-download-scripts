@@ -189,3 +189,9 @@ Previously fully downloaded files will be skipped, so you can download large bat
 
 Errata files will be overwritten. Once you download the correct version of these files, they will be safely skipped in 
 following runs.
+
+## Download speed
+
+Download speed might be (very) slow depending on the region. 
+
+In such case we recommend using Academic Torrents instead of this script. You can find [EPIC-KITCHENS-55 here](https://academictorrents.com/details/d08f4591d1865bbe3436d1eb25ed55aae8b8f043) and [EPIC-KITCHENS-100 here](https://academictorrents.com/details/cc2d9afabcbbe33686d2ecd9844b534e3a899f4b).
