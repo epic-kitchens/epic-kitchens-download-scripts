@@ -10,23 +10,29 @@ The script requires Python **3.5+** and  **no external libraries**.
 
 **Important:** We have recently detected an error in our pre-extracted RGB and Optical flow frames for two videos in our dataset. This does not affect the videos themselves or any of the annotations in this github. 
 
-However, if you've been using our pre-extracted frames, you can use the script to download the correct files:
+However, if you've been using our pre-extracted frames or object/hand detections and masks, you can use the script to download the correct files:
 
 ```bash
 python epic_downloader.py --errata
 ```
 
-This will download only the 4 affected files:
+This will download only the affected files:
 
 - `P01/rgb_frames/P01_109.tar`
 - `P01/flow_frames/P01_109.tar`
+- `P01/hand-objects/P01_109.pkl`
+- `P01/masks/P01_109.pkl`
 - `P27/rgb_frames/P27_103.tar`
 - `P27/flow_frames/P27_103.tar`
+- `P27/hand-objects/P27_103.pkl`
+- `P27/masks/P27_103.pkl`
 
 If you had downloaded these files previously, they will be overwritten.
 
 As of 26/09/2020, regardless of the `--errata` argument, the script will **always** download the correct version of the
 above files.
+
+As of 02/12/2020, the correct object/hand detections and masks will also be downloaded regardless of the `--errata` argument.
 
 # Using the script
 
@@ -177,13 +183,14 @@ Data will be split amongst participants under the output directory:
 ├── <font color="#0087FF">ConsentForms</font>
 └── <font color="#0087FF">P01</font>
     ├── <font color="#0087FF">flow_frames</font>
+    ├── <font color="#0087FF">hand-objects</font>
+    ├── <font color="#0087FF">masks</font>
     ├── <font color="#0087FF">meta_data</font>
-    ├── <font color="#0087FF">object_detection_images</font>
     ├── <font color="#0087FF">rgb_frames</font>
     └── <font color="#0087FF">videos</font>
 </pre>
 
-Each leaf directory will contain `.tar` or `.mp4` files accordingly. 
+Each leaf directory will contain `.tar`, `.mp4` or `.pkl` files accordingly. 
 
 Previously fully downloaded files will be skipped, so you can download large batches of files over multiple runs.
 

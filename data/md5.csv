@@ -3369,3 +3369,7 @@ a3e5f917cc069cb1236f677c99352a4b,P28/rgb_frames/P28_104.tar,100
 521191d89323b4a203eab15bebec654e,P27/rgb_frames/P27_103.tar,errata
 d568f7a145e271e0f253ccb5921ab742,P01/flow_frames/P01_109.tar,errata
 dfb2fcd3d83c4ce16335df577308ff14,P27/flow_frames/P27_103.tar,errata
+fc9a5f9fb96c3bedbde6d1815bd13b11,hand-objects/P01/P01_109.pkl,errata
+02bb19c91555aa6c0633e3dc1a41768e,hand-objects/P27/P27_103.pkl,errata
+3fe204cc198ccc95ba02b629ab4b678e,masks/P01/P01_109.pkl,errata
+08ee6cb76bdabdbefb8de41d46f5f366,masks/P27/P27_103.pkl,errata

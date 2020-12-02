@@ -240,9 +240,9 @@ class EpicDownloader:
         remote_md5 = self.md5[version].get(key, None)
 
         if remote_md5 is None:
-            return False  # this should never happen
+            return False
 
-        local_md5 = self.md5_checksum(output_path)  # we already checked file exists so we should be safe here
+        local_md5 = self.md5_checksum(output_path)  # we already checked file exists so we are safe here
         return local_md5 == remote_md5
 
     def download(self, what=('videos', 'rgb_frames', 'flow_frames'), participants='all', splits='all',
