@@ -310,7 +310,7 @@ def create_parser():
                         help='Download rgb frames')
     parser.add_argument('--flow-frames', dest='what', action='append_const', const='flow_frames',
                         help='Download optical flow frames')
-    parser.add_argument('--object-detection_images', dest='what', action='append_const',
+    parser.add_argument('--object-detection-images', dest='what', action='append_const',
                         const='object_detection_images', help='Download object detection images (only for EPIC 55)')
     parser.add_argument('--masks', dest='what', action='append_const',
                         const='masks', help='Download Mask R-CNN masks and hand-object correspondences')
