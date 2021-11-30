@@ -6,6 +6,17 @@ We provide a `python` script to download both the EPIC KITCHENS-100 and EPIC KIT
 
 The script requires Python **3.5+** and  **no external libraries**.
 
+## `Error 404 / Errno 104 Connection reset by peer` when using the script
+
+We are aware of an issue occurring when using the download script depending on the region, e.g.
+
+```bash
+Could not download file from https://data.bris.ac.uk/datasets/3h91syskeag572hl6tvuovwv4d/frames_rgb_flow/rgb/train/P01/P01_01.tar
+Error: [Errno 104] Connection reset by peer
+```
+
+While we fix this problem, please use Academic Torrents if you face this issue. You can find [EPIC-KITCHENS-55 here](https://academictorrents.com/details/d08f4591d1865bbe3436d1eb25ed55aae8b8f043) and [EPIC-KITCHENS-100 here](https://academictorrents.com/details/cc2d9afabcbbe33686d2ecd9844b534e3a899f4b).
+
 # Errata
 
 **Important:** We have recently detected an error in our pre-extracted RGB and Optical flow frames for two videos in our dataset. This does not affect the videos themselves or any of the annotations in this github. 
