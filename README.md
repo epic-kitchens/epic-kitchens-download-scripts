@@ -82,9 +82,9 @@ For more information about objects masks (which you download with `--masks`), ch
 
 ## Specifying participants
 
-You can use the argument `--participants` if you want to download data for only a subset of the participants. Participants must be specified with their *numerical* ID. 
+You can use the argument `--participants` if you want to download data for only a subset of the participants. Participants mcan be specified with their numerical *or* string ID. 
 
-You can specify a single participant, e.g. `--participants 1` for P01 or a comma-separated list of them, e.g. `--participants 1,2,3` for participants `P01`, `P02` and `P03`
+You can specify a single participant, e.g. `--participants 1` or `--participants P01` for participant `P01`, or a comma-separated list of them, e.g. `--participants 1,2,3` or `--participants P01,P02,P03` for participants `P01`, `P02` and `P03`
 
 This argument can also be combined with the aforementioned arguments. For example:
 
@@ -93,6 +93,22 @@ python epic_downloader.py --videos --participants 1,2,3
 ```
 
 Will download only videos from `P01, P02` and `P03`.
+
+## Specifying specific videos
+
+You can use the argument `--specific-videos` if you want to download a specific subset of videos, withouth having to download the entire participant folder. Videos must be specified with their string ID.
+
+You can specifiy a single video e.g. `--specific-videos P01_01` for video `P01_01`, or a comma-seperated list of them, e.g. `--specific-videos P01_01,P02_122,P03_04` for videos `P01_01`, `P02_122` and `P03_04`.
+
+This argument can also be combined with the aforementioned arguments. For example:
+
+```bash
+python epic_downloader.py --videos --participants P01 --specific-videos P02_122,P03_04 
+```
+
+Will download all the videos from participant `P01`, but only videos `P02_122` and `P03_04` from participants `P02` and `P03`. 
+
+**Note:** if the same participant is specified in the partipant and specific-videos argument, the specific video of that participant will not be exclusively downloaded. Instead, all videos from that particpant will be downloaded e.g. `--particpants P01 --specific-videos P01_01` will download all videos from participant P01, rather than just P01_01.
 
 ## Specifying a challenge split
 
