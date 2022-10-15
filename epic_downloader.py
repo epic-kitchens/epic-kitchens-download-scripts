@@ -269,13 +269,20 @@ class EpicDownloader:
                 vl = [v for v in self.videos_per_split[ds] if (extension_only and v['extension']) or
                                                               (epic55_only and not v['extension'])]
 
-            if participants != 'all':
+            if participants != 'all' and specific_videos == 'all':
                 if type(participants[0]) == int:
                     vl = [v for v in vl if v['participant'] in participants]
                 else:
                     vl = [v for v in vl if v['participant_str'] in participants]
-            if specific_videos != 'all':
+            if specific_videos != 'all' and participants == 'all':
                 vl = [v for v in vl if v['video_id'] in specific_videos]
+            elif participants != 'all' and specific_videos != 'all':
+                if type(participants[0]) == int:
+                    vp = [v for v in vl if v['participant'] in participants]
+                else:
+                    vp = [v for v in vl if v['participant_str'] in participants]
+                vs = [v for v in vl if v['video_id'] in specific_videos]
+                vl = vp + vs
 
             video_dicts.update({v['video_id']: v for v in vl})  # We use a dict to avoid duplicates
 
@@ -414,13 +421,6 @@ def parse_args(parser):
                 and x[0] == "P"
                 for x in args.specific_videos
             ), 'A video ID is wrongly formatted. Please ensure all video IDs are of the form PXX_YY(Y).'
-        if args.participants != 'all':
-            warnings.warn(
-                    'Overriding specified participants and only downloading ' \
-                    'specified videos. If this is not intended, please only ' \
-                    'specify the participants.'
-                )
-            args.participants = 'all'
 
     if args.errata:
         args.what = tuple(w for w in args.what if w != 'consent_forms')
