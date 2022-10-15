@@ -4,6 +4,7 @@ import os
 import csv
 import shutil
 import sys
+import warnings
 
 try:
     import urllib.request
@@ -238,14 +239,14 @@ class EpicDownloader:
 
         key = '/'.join(parts)
         remote_md5 = self.md5[version].get(key, None)
-
+        
         if remote_md5 is None:
             return False
 
         local_md5 = self.md5_checksum(output_path)  # we already checked file exists so we are safe here
         return local_md5 == remote_md5
 
-    def download(self, what=('videos', 'rgb_frames', 'flow_frames'), participants='all', splits='all',
+    def download(self, what=('videos', 'rgb_frames', 'flow_frames'), participants='all', specific_videos='all', splits='all',
                  challenges='all', extension_only=False, epic55_only=False):
 
         video_dicts = {}
@@ -269,13 +270,18 @@ class EpicDownloader:
                                                               (epic55_only and not v['extension'])]
 
             if participants != 'all':
-                vl = [v for v in vl if v['participant'] in participants]
+                if type(participants[0]) == int:
+                    vl = [v for v in vl if v['participant'] in participants]
+                else:
+                    vl = [v for v in vl if v['participant_str'] in participants]
+            if specific_videos != 'all':
+                vl = [v for v in vl if v['video_id'] in specific_videos]
 
-            video_dicts.update({v['video_id']: v for v in vl})  # we use a dict to avoid duplicates
+            video_dicts.update({v['video_id']: v for v in vl})  # We use a dict to avoid duplicates
 
         # sorting the dictionary
         video_dicts = {k: video_dicts[k] for k in sorted(video_dicts.keys())}
-
+        
         if epic55_only:
             source = 'EPIC 55'
         elif extension_only:
@@ -284,15 +290,22 @@ class EpicDownloader:
             source = 'EPIC 100'
 
         what_str = ', '.join(' '.join(w.split('_')) for w in what)
-        participants_str = 'all' if participants == 'all' else ', '.join(['P{:02d}'.format(p) for p in participants])
+        if participants == 'all':
+            participants_str = 'all'  
+        elif type(participants[0]) == int:
+            participants_str = ', '.join(['P{:02d}'.format(p) for p in participants])
+        else:
+            participants_str = ', '.join([f'{p}' for p in participants])
+        videos_str = 'all' if specific_videos == 'all' else ', '.join([f"{v}" for v in specific_videos])
 
         if not self.errata_only:
             print('Going to download: {}\n'
                   'for challenges: {}\n'
                   'splits: {}\n'
                   'participants: {}\n'
-                  'data source: {}'.format(what_str, challenges, splits, participants_str, source))
-
+                  'specific videos: {}\n'
+                  'data source: {}'.format(what_str, challenges, splits, participants_str, videos_str, source))
+        
         for w in what:
             if not self.errata_only:
                 print_header('| Downloading {} now |'.format(' '.join(w.split('_'))), char='-')
@@ -319,8 +332,10 @@ def create_parser():
     parser.add_argument('--consent-forms', dest='what', action='append_const', const='consent_forms',
                         help='Download consent_forms')
     parser.add_argument('--participants', nargs='?', type=str, default='all',
-                        help='Specify participants IDs. You can specif a single participant, e.g. `--participants 1` '
+                        help='Specify participants IDs. You can specify a single participant, e.g. `--participants 1` '
                              'or a comma-separated list of them, e.g. `--participants 1,2,3`')
+    parser.add_argument('--specific-videos', nargs='?', type=str, default='all', help='Specify video IDs. You can specify a single video, e.g. `--participants P01_01` '
+                             'or a comma-separated list of them, e.g. `--participants P01_01,P01_02,P01_03`')
     parser.add_argument('--extension-only', action='store_true', help='Download extension only')
     parser.add_argument('--epic55-only', action='store_true', help='Download only EPIC 55\'s data')
     parser.add_argument('--action-recognition', dest='challenges', action='append_const', const='ar',
@@ -383,13 +398,29 @@ def parse_args(parser):
         args.splits = 'all'
 
     if args.participants != 'all':
-        try:
-            args.participants = [int(p.strip()) for p in args.participants.split(',')]
-        except ValueError:
-            print('Invalid participants arguments: {}.'
-                  '\nYou can specif a single participant, e.g. `--participants 1` or\n'
-                  'a comma-separated list of them, e.g. `--participants 1,2,3`.'.format(args.participants))
-            exit(-1)
+        args.participants = [p.strip() for p in args.participants.split(',')]
+        string_check = len(args.participants[0]) == 3 and args.participants[0][0] == 'P'
+        int_check = len(args.participants[0]) == 1
+        assert int_check or string_check, 'Invalid participant format. ' \
+                                          'Please enter the participants in numerical (1), ' \
+                                          'or string format (P01).'
+        args.participants = list(map(int, args.participants)) if int_check else args.participants
+
+    if args.specific_videos != 'all':
+        args.specific_videos = [v.strip() for v in args.specific_videos.split(',')]
+        assert all(
+                len(x.split("_")[0]) == 3 
+                and (len(x.split("_")[1]) == 2 or len(x.split("_")[1]) == 3) 
+                and x[0] == "P"
+                for x in args.specific_videos
+            ), 'A video ID is wrongly formatted. Please ensure all video IDs are of the form PXX_YY(Y).'
+        if args.participants != 'all':
+            warnings.warn(
+                    'Overriding specified participants and only downloading ' \
+                    'specified videos. If this is not intended, please only ' \
+                    'specify the participants.'
+                )
+            args.participants = 'all'
 
     if args.errata:
         args.what = tuple(w for w in args.what if w != 'consent_forms')
@@ -407,7 +438,7 @@ if __name__ == '__main__':
     print_header('*** Welcome to the EPIC Kitchens Downloader! ***')
 
     downloader = EpicDownloader(base_output=args.output_path,  errata_only=args.errata)
-    downloader.download(what=args.what, participants=args.participants, splits=args.splits, challenges=args.challenges,
+    downloader.download(what=args.what, participants=args.participants, specific_videos=args.specific_videos, splits=args.splits, challenges=args.challenges,
                         extension_only=args.extension_only, epic55_only=args.epic55_only)
 
     print_header('*** All done, bye! ***')
