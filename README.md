@@ -96,7 +96,7 @@ Will download only videos from `P01, P02` and `P03`.
 
 ## Specifying specific videos
 
-You can use the argument `--specific-videos` if you want to download a specific subset of videos, withouth having to download the entire participant folder. Videos must be specified with their string ID.
+You can use the argument `--specific-videos` if you want to download a specific subset of videos, without having to download all videos from certain participants. Videos must be specified with their string ID.
 
 You can specifiy a single video e.g. `--specific-videos P01_01` for video `P01_01`, or a comma-seperated list of them, e.g. `--specific-videos P01_01,P02_122,P03_04` for videos `P01_01`, `P02_122` and `P03_04`.
 
