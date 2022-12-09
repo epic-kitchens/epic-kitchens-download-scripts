@@ -82,7 +82,7 @@ For more information about objects masks (which you download with `--masks`), ch
 
 ## Specifying participants
 
-You can use the argument `--participants` if you want to download data for only a subset of the participants. Participants mcan be specified with their numerical *or* string ID. 
+You can use the argument `--participants` if you want to download data for only a subset of the participants. Participants can be specified with their numerical *or* string ID. 
 
 You can specify a single participant, e.g. `--participants 1` or `--participants P01` for participant `P01`, or a comma-separated list of them, e.g. `--participants 1,2,3` or `--participants P01,P02,P03` for participants `P01`, `P02` and `P03`
 
