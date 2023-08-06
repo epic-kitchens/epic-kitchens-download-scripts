@@ -15,7 +15,7 @@ Could not download file from https://data.bris.ac.uk/datasets/3h91syskeag572hl6t
 Error: [Errno 104] Connection reset by peer
 ```
 
-While we fix this problem, please use Academic Torrents if you face this issue. You can find [EPIC-KITCHENS-55 here](https://academictorrents.com/details/d08f4591d1865bbe3436d1eb25ed55aae8b8f043) and [EPIC-KITCHENS-100 here](https://academictorrents.com/details/cc2d9afabcbbe33686d2ecd9844b534e3a899f4b).
+While we fix this problem, please use Academic Torrents if you face this issue. You can find [EPIC-KITCHENS-55 here](https://academictorrents.com/details/d08f4591d1865bbe3436d1eb25ed55aae8b8f043) and [EPIC-KITCHENS-100 here](https://academictorrents.com/details/c92b4a3cd3834e9af9666ac82379ff15ca289a83).
 
 # Errata
 
