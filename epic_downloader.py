@@ -5,6 +5,7 @@ import csv
 import shutil
 import sys
 import warnings
+import ssl
 
 try:
     import urllib.request
@@ -22,6 +23,9 @@ def print_header(header, char='*'):
     print(header)
     print(char * len(header))
     print()
+
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class EpicDownloader:
