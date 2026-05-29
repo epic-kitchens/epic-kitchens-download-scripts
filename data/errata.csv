@@ -1,0 +1,9 @@
+rdsf_path,dropbox_path
+P01/rgb_frames/P01_109.tar,https://www.dropbox.com/s/mh7y0goc5x945nu/P01_109.tar?dl=1
+P27/rgb_frames/P27_103.tar,https://www.dropbox.com/s/c1eo70v6dokr6cf/P27_103.tar?dl=1
+P01/flow_frames/P01_109.tar,https://www.dropbox.com/s/kdadnyf1epte0f1/P01_109.tar?dl=1
+P27/flow_frames/P27_103.tar,https://www.dropbox.com/s/48kiyqarqfmb2bk/P27_103.tar?dl=1
+hand-objects/P01/P01_109.pkl,https://www.dropbox.com/s/fjvhpd4o9l2n08y/P01_109.pkl?dl=1
+hand-objects/P27/P27_103.pkl,https://www.dropbox.com/s/ocvy4fskv9j8xmt/P27_103.pkl?dl=1
+masks/P01/P01_109.pkl,https://www.dropbox.com/s/mzhguzwsyjxbh9e/P01_109.pkl?dl=1
+masks/P27/P27_103.pkl,https://www.dropbox.com/s/zc15u7qlm3hqn0c/P27_103.pkl?dl=1
