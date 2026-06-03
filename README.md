@@ -49,6 +49,62 @@ As of 02/12/2020, the correct object/hand detections and masks will also be down
 
 The script accepts a number of arguments that allow you to specify what you want to download: by default the script will download **everything** to your **home directory**. 
 
+## Metadata files
+
+The scripts read the EPIC-KITCHENS split, checksum and errata metadata from CSV files. This fork keeps the local `data/` directory untracked, so keep local copies of the metadata files there or pass explicit paths with the metadata arguments.
+
+Default metadata paths:
+
+- `data/epic_55_splits.csv`
+- `data/epic_100_splits.csv`
+- `data/md5.csv`
+- `data/errata.csv`
+
+Both verification scripts also accept `--epic55-splits`, `--epic100-splits`, `--md5` and `--errata` if your metadata files live elsewhere.
+
+## Download videos with verification
+
+`epic_video_downloader_verify.py` is a video-only downloader with progress output and MD5 verification. It reads the same metadata CSVs as `epic_downloader.py`, selects videos by participant, specific video, challenge, split, or EPIC version, and writes files to the same layout:
+
+```bash
+python epic_video_downloader_verify.py \
+  --participants P01,P02 \
+  --output-path /path/to/download/root \
+  --max-retries 3 \
+  --report epic_download_report.csv
+```
+
+The script verifies existing files before downloading and skips complete files. If a file is missing, empty, or has the wrong MD5 checksum, it downloads to a `.part` file, verifies the new file, and then replaces the old file only after verification succeeds. Interrupted `.part` downloads are resumed with HTTP Range requests when the server supports them.
+
+Useful options include:
+
+- `--specific-videos P01_01,P02_122` to download selected videos.
+- `--splits train,test` and `--challenges ar,da,cmr` to limit the selected split columns.
+- `--extension-only` or `--epic55-only` to restrict the EPIC version.
+- `--no-md5-progress` to hide checksum progress output.
+- `--verify-ssl` to enable SSL certificate verification.
+
+## Verify existing video downloads
+
+`verify_epic_kitchens_download.py` checks an existing EPIC-KITCHENS video directory without downloading files. It reports missing files, empty files, non-file paths and MD5 mismatches, and can write a CSV report for later inspection.
+
+```bash
+python verify_epic_kitchens_download.py \
+  --output-path /path/to/download/root \
+  --participants P30,P31 \
+  --videos \
+  --report epic_verify_report.csv
+```
+
+By default `--output-path` is the same base directory passed to `epic_downloader.py`, and the script appends `EPIC-KITCHENS`. If you already have the exact dataset root, use `--epic-root /path/to/EPIC-KITCHENS` instead.
+
+Useful options include:
+
+- `--participants all` or a comma-separated participant list such as `P30,P31,1`.
+- `--splits` and `--challenges` to verify only selected challenge split columns.
+- `--extension-only` or `--epic55-only` to restrict the EPIC version.
+- `--no-md5` to check only that expected files exist and are non-empty.
+- `--max-list` to control how many problem files are printed per participant.
 
 ## Download only certain data types
 
