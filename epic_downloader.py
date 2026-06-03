@@ -2,7 +2,6 @@ import argparse
 import hashlib
 import os
 import csv
-import shutil
 import sys
 import warnings
 import ssl
@@ -68,14 +67,53 @@ class EpicDownloader:
                 self.md5[v][row['file_remote_path']] = row['md5']
 
     @staticmethod
+    def print_progress(downloaded, total_size, width=30):
+        mb_dl = downloaded / (1024.0 * 1024.0)
+        if total_size is not None and total_size > 0:
+            pct = min(100.0, 100.0 * downloaded / float(total_size))
+            filled = int(width * downloaded / float(total_size))
+            if filled > width:
+                filled = width
+            bar = '#' * filled + '-' * (width - filled)
+            mb_tot = total_size / (1024.0 * 1024.0)
+            line = '[{}] {:.1f}% {:.2f} MB / {:.2f} MB'.format(bar, pct, mb_dl, mb_tot)
+        else:
+            line = '{:.2f} MB downloaded'.format(mb_dl)
+        sys.stdout.write('\r' + line.ljust(100))
+        sys.stdout.flush()
+
+    @staticmethod
     def download_file(url, output_path):
         Path(os.path.dirname(output_path)).mkdir(parents=True, exist_ok=True)
 
         try:
             with urllib.request.urlopen(url) as response, open(output_path, 'wb') as output_file:
                 print('Downloading\nfrom  {}\nto    {}'.format(url, output_path))
-                shutil.copyfileobj(response, output_file)
+                cl = response.getheader('Content-Length')
+                total_size = None
+                if cl is not None:
+                    try:
+                        total_size = int(cl)
+                        if total_size <= 0:
+                            total_size = None
+                    except (ValueError, TypeError):
+                        total_size = None
+
+                chunk_size = 1024 * 1024
+                downloaded = 0
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    output_file.write(chunk)
+                    downloaded += len(chunk)
+                    EpicDownloader.print_progress(downloaded, total_size, width=30)
+
+                if total_size is not None and total_size > 0:
+                    EpicDownloader.print_progress(total_size, total_size, width=30)
+                print()
         except Exception as e:
+            print()
             print('Could not download file from {}\nError: {}'.format(url, str(e)))
 
     @staticmethod
